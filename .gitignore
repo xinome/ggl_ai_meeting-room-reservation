@@ -1,0 +1,2 @@
+# Gitコミット対象外にするファイルやディレクトリを指定
+backend/node_modules

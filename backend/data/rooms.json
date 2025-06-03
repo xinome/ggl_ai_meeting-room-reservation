@@ -1,0 +1,5 @@
+[
+  { "id": "room1", "name": "会議室A", "capacity": 10, "equipment": ["プロジェクター", "ホワイトボード"] },
+  { "id": "room2", "name": "会議室B", "capacity": 6, "equipment": ["モニター"] },
+  { "id": "room3", "name": "小会議室C", "capacity": 4, "equipment": [] }
+]

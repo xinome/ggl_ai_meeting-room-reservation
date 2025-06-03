@@ -1,30 +1,72 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div id="app-container">
+    <header>
+      <!-- <nav>
+        <router-link to="/">ホーム</router-link> |
+        <router-link to="/my-reservations">マイ予約</router-link>
+      </nav> -->
+    </header>
+    <main>
+      <router-view />
+    </main>
+    <footer>
+      <p>© {{ new Date().getFullYear() }} 会議室予約システム</p>
+    </footer>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<script setup lang="ts">
+// No script needed for this basic layout
+</script>
+
+<style>
+/* グローバルスタイル */
+body {
+  margin: 0;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
+  background-color: #f4f4f4;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+#app-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 15px;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+header {
+  padding: 20px 0;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+header nav a {
+  font-weight: bold;
+  color: #2c3e50;
+  text-decoration: none;
+  margin: 0 10px;
+}
+
+header nav a.router-link-exact-active {
+  color: #42b983;
+}
+
+main {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+footer {
+  text-align: center;
+  margin-top: 30px;
+  padding: 15px 0;
+  font-size: 0.9em;
+  color: #777;
+  border-top: 1px solid #eee;
 }
 </style>

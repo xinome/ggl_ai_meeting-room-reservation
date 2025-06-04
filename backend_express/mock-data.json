@@ -1,0 +1,47 @@
+{
+  "users": [
+    {
+      "id": "u-001",
+      "email": "test@example.com",
+      "password": "password123",
+      "name": "テスト ユーザー",
+      "role": "member"
+    },
+    {
+      "id": "u-002",
+      "email": "admin@example.com",
+      "password": "adminpassword",
+      "name": "管理者 ユーザー",
+      "role": "admin"
+    },
+    {
+      "id": "u-003",
+      "email": "guest@example.com",
+      "password": "guestpassword",
+      "name": "ゲスト ユーザー",
+      "role": "guest"
+    }
+  ],
+  "reservations": [
+    {
+      "id": "r-001",
+      "userId": "u-001",
+      "roomId": "room-A",
+      "title": "定例会議",
+      "date": "2025-07-10",
+      "startTime": "10:00",
+      "endTime": "11:00",
+      "status": "confirmed"
+    },
+    {
+      "id": "r-002",
+      "userId": "u-002",
+      "roomId": "room-B",
+      "title": "プロジェクトX進捗",
+      "date": "2025-07-10",
+      "startTime": "14:00",
+      "endTime": "15:00",
+      "status": "confirmed"
+    }
+  ]
+}

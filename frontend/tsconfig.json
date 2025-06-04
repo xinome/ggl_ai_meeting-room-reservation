@@ -9,6 +9,17 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "composite": true,
     "types": ["jest", "node"] // jestとnodeの型を追加
   },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",   // 型定義ファイルを含める
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "tests/**/*.ts",   // Jestのテストファイルを含める
+    "tests/**/*.tsx"   // もし .tsx を使う場合
+  ],
+  // "references": [{ "path": "./tsconfig.node.json" }] // Viteの標準構成の場合、これも確認
+  "exclude": ["node_modules"] // 通常デフォルトで除外されます
 }

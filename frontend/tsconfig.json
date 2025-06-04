@@ -9,17 +9,23 @@
     "paths": {
       "@/*": ["src/*"]
     },
+    "types": ["jest", "node", "vite/client"], // jestとnodeの型を追加
+    "module": "ESNext",
+    "target": "ESNext",
+    "strict": true,
     "composite": true,
-    "types": ["jest", "node"] // jestとnodeの型を追加
+    "moduleResolution": "bundler", // または "node"
+    "esModuleInterop": true,
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.d.ts",   // 型定義ファイルを含める
     "src/**/*.tsx",
     "src/**/*.vue",
+    "src/vite-env.d.ts", // 明示的に含める
     "tests/**/*.ts",   // Jestのテストファイルを含める
-    "tests/**/*.tsx"   // もし .tsx を使う場合
-  ],
+    "tests/**/*.tsx",   // もし .tsx を使う場合
+    "jest.setup.ts"  ],
   // "references": [{ "path": "./tsconfig.node.json" }] // Viteの標準構成の場合、これも確認
   "exclude": ["node_modules"] // 通常デフォルトで除外されます
 }

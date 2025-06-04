@@ -1,0 +1,35 @@
+[
+  {
+    "id": "u-001",
+    "name": "田中 太郎",
+    "email": "taro.tanaka@example.com",
+    "password": "password123",
+    "role": "member",
+    "department": "営業部",
+    "branchId": "b-001",
+    "createdAt": "2023-01-10T10:00:00Z",
+    "updatedAt": "2023-01-10T10:00:00Z"
+  },
+  {
+    "id": "u-002",
+    "name": "佐藤 花子",
+    "email": "hanako.sato@example.com",
+    "password": "password456",
+    "role": "member",
+    "department": "開発部",
+    "branchId": "b-002",
+    "createdAt": "2023-01-15T11:00:00Z",
+    "updatedAt": "2023-01-16T14:30:00Z"
+  },
+  {
+    "id": "u-003",
+    "name": "鈴木 一郎",
+    "email": "ichiro.suzuki@example.com",
+    "password": "adminpassword",
+    "role": "admin",
+    "department": "管理部",
+    "branchId": "b-001",
+    "createdAt": "2023-01-05T09:00:00Z",
+    "updatedAt": "2023-02-01T12:00:00Z"
+  }
+]

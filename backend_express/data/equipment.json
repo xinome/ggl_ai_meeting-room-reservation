@@ -1,0 +1,30 @@
+[
+  {
+    "id": "eq-001",
+    "name": "プロジェクター",
+    "description": "高輝度, HDMI/USB-C対応",
+    "createdAt": "2023-01-01T00:00:00Z",
+    "updatedAt": "2023-01-01T00:00:00Z"
+  },
+  {
+    "id": "eq-002",
+    "name": "ホワイトボード",
+    "description": "1800x900mm マーカーセット付き",
+    "createdAt": "2023-01-01T00:00:00Z",
+    "updatedAt": "2023-01-01T00:00:00Z"
+  },
+  {
+    "id": "eq-003",
+    "name": "マイクスピーカーシステム",
+    "description": "大規模会議用ワイヤレスマイクとスピーカー",
+    "createdAt": "2023-02-01T00:00:00Z",
+    "updatedAt": "2023-02-01T00:00:00Z"
+  },
+  {
+    "id": "eq-004",
+    "name": "ウェブカメラ",
+    "description": "Full HD, 広角レンズ",
+    "createdAt": "2023-03-01T00:00:00Z",
+    "updatedAt": "2023-03-01T00:00:00Z"
+  }
+]

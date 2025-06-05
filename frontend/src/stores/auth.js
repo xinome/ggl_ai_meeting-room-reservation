@@ -4,6 +4,24 @@ import axios from 'axios'; // API通信用
 
 const API_BASE_URL = 'http://localhost:3001'; // バックエンドAPIのURL
 
+/**
+ * @typedef {object} User
+ * @property {string} id
+ * @property {string} name
+ * @property {string} email
+ * @property {string} role
+ * @property {string} [department]
+ * @property {string} [branchId]
+ */
+
+/**
+ * @typedef {object} AuthState
+ * @property {string | null} token
+ * @property {User | null} user
+ * @property {string | null} loginError
+ * @property {boolean} isLoading
+ */
+
 export const useAuthStore = defineStore('auth', {
   // ストアの状態を定義
   state: () => ({

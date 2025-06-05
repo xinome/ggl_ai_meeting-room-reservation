@@ -16,6 +16,7 @@
     "composite": true,
     "moduleResolution": "bundler", // または "node"
     "esModuleInterop": true,
+    "allowJs": true,     // .jsファイルをインポートすることを許可
   },
   "include": [
     "src/**/*.ts",
@@ -25,7 +26,7 @@
     "src/vite-env.d.ts", // 明示的に含める
     "tests/**/*.ts",   // Jestのテストファイルを含める
     "tests/**/*.tsx",   // もし .tsx を使う場合
-    "jest.setup.ts"  ],
+    "jest.setup.ts", "src/stores/api.js", "src/stores/auth.js"  ],
   // "references": [{ "path": "./tsconfig.node.json" }] // Viteの標準構成の場合、これも確認
   "exclude": ["node_modules"] // 通常デフォルトで除外されます
 }

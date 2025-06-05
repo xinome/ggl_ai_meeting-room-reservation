@@ -11,5 +11,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "jest.setup.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "jest.setup.ts", "src/stores/api.js", "src/stores/auth.js"]
 }

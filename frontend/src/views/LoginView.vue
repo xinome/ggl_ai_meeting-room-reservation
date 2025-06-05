@@ -4,11 +4,11 @@
     <form @submit.prevent="handleLogin">
       <div class="form-group">
         <label for="email">Email:</label>
-        <input type="email" id="email" v.model="email" required />
+        <input type="email" id="email" v-model="email" required />
       </div>
       <div class="form-group">
         <label for="password">Password:</label>
-        <input type="password" id="password" v.model="password" required />
+        <input type="password" id="password" v-model="password" required />
       </div>
       <button type="submit" :disabled="authStore.isLoading">
         {{ authStore.isLoading ? 'Logging in...' : 'Login' }}
@@ -31,6 +31,9 @@ const router = useRouter();
 const route = useRoute();
 
 const handleLogin = async () => {
+
+  console.log('Attempting to log in with:', { email: email.value, password: password.value });
+
   const success = await authStore.login({ email: email.value, password: password.value });
   if (success) {
     // ログイン成功後、リダイレクト先がクエリにあればそこへ、なければダッシュボードへ

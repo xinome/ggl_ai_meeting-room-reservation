@@ -137,6 +137,7 @@ app.get('/reservations', (req, res) => {
     // TODO: クエリパラメータ (date, roomId, userId 등) に基づくフィルタリングを実装
     res.status(200).json(mockReservations);
 });
+
 // GET /reservations/:id (特定予約取得)
 app.get('/reservations/:id', (req, res) => {
     const reservation = mockReservations.find(r => r.id === req.params.id);
@@ -146,21 +147,64 @@ app.get('/reservations/:id', (req, res) => {
         res.status(404).json({ message: 'Reservation not found' });
     }
 });
+
 // POST /reservations (予約作成)
 app.post('/reservations', (req, res) => {
-    // 認証済みユーザーIDを本来はトークンから取得する
-    // const userIdFromToken = "u-001"; // 仮
     const newReservation = {
         id: `res-${Date.now()}`,
-        // userId: userIdFromToken,
         ...req.body,
-        status: req.body.status || 'tentative', // デフォルトステータス
+        status: req.body.status || 'tentative',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     };
-    // TODO: バリデーション (必須項目、日付の妥当性、会議室の空き状況など)
     mockReservations.push(newReservation);
+    // 元の予約データにはattendeeNamesがないので、もしあればそれを使うか、
+    // attendees (ID配列) からユーザー名を取得して含める処理が必要だが、モックなので簡略化
     res.status(201).json(newReservation);
+});
+
+// PUT /reservations/:id (予約更新) <--- ★★★ この部分を追加 ★★★
+app.put('/reservations/:id', (req, res) => {
+    const reservationId = req.params.id;
+    const updatedData = req.body;
+
+    const reservationIndex = mockReservations.findIndex(r => r.id === reservationId);
+
+    if (reservationIndex === -1) {
+        return res.status(404).json({ message: 'Reservation not found for update' });
+    }
+
+    // 更新対象の予約を取得し、新しいデータで上書き
+    // 注意: 本来はもっと厳密なバリデーションや、更新すべきでないフィールドの保護が必要です。
+    // (例: userId や createdAt は通常更新させない)
+    const originalReservation = mockReservations[reservationIndex];
+    mockReservations[reservationIndex] = {
+        ...originalReservation,       // 既存のデータをスプレッド
+        ...updatedData,               // リクエストボディのデータで上書き
+        id: reservationId,            // IDは変更しない
+        userId: originalReservation.userId, // 作成者は変更しない (ポリシーによる)
+        createdAt: originalReservation.createdAt, // 作成日時も変更しない
+        updatedAt: new Date().toISOString(), // 更新日時を現在時刻に設定
+    };
+
+    console.log(`Reservation ${reservationId} updated:`, mockReservations[reservationIndex]);
+    res.status(200).json(mockReservations[reservationIndex]); // 更新後のデータを返す
+});
+
+
+// DELETE /reservations/:id (予約削除)
+app.delete('/reservations/:id', (req, res) => {
+    const reservationId = req.params.id;
+    const initialLength = mockReservations.length;
+    mockReservations = mockReservations.filter(r => r.id !== reservationId);
+
+    if (mockReservations.length < initialLength) {
+        console.log(`Reservation ${reservationId} deleted.`);
+        res.status(200).json({ message: 'Reservation deleted successfully' });
+        // res.status(204).send(); // No Content もよく使われる
+    } else {
+        res.status(404).json({ message: 'Reservation not found for deletion' });
+    }
 });
 
 

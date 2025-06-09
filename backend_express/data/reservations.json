@@ -2,7 +2,7 @@
   {
     "id": "res-001",
     "title": "第一回 定例ミーティング",
-    "date": "2024-06-10",
+    "date": "2025-06-10",
     "startTime": "10:00",
     "endTime": "11:00",
     "description": "週次の進捗共有と課題確認を行います。",
@@ -11,13 +11,13 @@
     "userId": "u-001",
     "attendees": ["u-001", "u-002"],
     "attendeeNames": ["田中 太郎", "佐藤 花子"],
-    "createdAt": "2024-06-01T14:00:00Z",
-    "updatedAt": "2024-06-01T14:30:00Z"
+    "createdAt": "2025-06-01T14:00:00Z",
+    "updatedAt": "2025-06-01T14:30:00Z"
   },
   {
     "id": "res-002",
     "title": "クライアントX社様 ご来社",
-    "date": "2024-06-10",
+    "date": "2025-06-10",
     "startTime": "14:00",
     "endTime": "15:30",
     "description": "新機能デモンストレーション",
@@ -26,13 +26,13 @@
     "userId": "u-001",
     "attendees": ["u-001"],
     "attendeeNames": ["田中 太郎", "クライアントX様"],
-    "createdAt": "2024-06-03T10:00:00Z",
-    "updatedAt": "2024-06-03T10:00:00Z"
+    "createdAt": "2025-06-03T10:00:00Z",
+    "updatedAt": "2025-06-03T10:00:00Z"
   },
   {
     "id": "res-003",
     "title": "開発チーム スプリントレビュー",
-    "date": "2024-06-12",
+    "date": "2025-06-12",
     "startTime": "13:00",
     "endTime": "15:00",
     "description": "スプリントの成果物レビューと次スプリント計画",
@@ -41,13 +41,13 @@
     "userId": "u-002",
     "attendees": ["u-002", "u-003"],
     "attendeeNames": ["佐藤 花子", "鈴木 一郎"],
-    "createdAt": "2024-06-05T16:00:00Z",
-    "updatedAt": "2024-06-05T16:00:00Z"
+    "createdAt": "2025-06-05T16:00:00Z",
+    "updatedAt": "2025-06-05T16:00:00Z"
   },
   {
     "id": "res-004",
     "title": "大阪支社 月次報告会",
-    "date": "2024-06-15",
+    "date": "2025-06-15",
     "startTime": "10:00",
     "endTime": "12:00",
     "description": "大阪支社の月次業績報告",
@@ -56,7 +56,7 @@
     "userId": "u-003",
     "attendees": ["u-003", "u-002"],
     "attendeeNames": ["鈴木 一郎", "佐藤 花子"],
-    "createdAt": "2024-06-01T09:00:00Z",
-    "updatedAt": "2024-06-01T09:00:00Z"
+    "createdAt": "2025-06-01T09:00:00Z",
+    "updatedAt": "2025-06-01T09:00:00Z"
   }
 ]

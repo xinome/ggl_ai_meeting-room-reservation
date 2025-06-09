@@ -4,6 +4,8 @@ import HomeView from '../views/HomeView.vue';
 import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
 import CalendarReservationView from '../views/CalendarReservationView.vue';
+import ReservationEditView from '../views/ReservationEditView.vue';
+
 import { useAuthStore } from '../stores/auth'; // Piniaストアをインポート
 
 const routes = [
@@ -31,6 +33,13 @@ const routes = [
     name: 'CalendarReservation',
     component: CalendarReservationView,
     meta: { requiresAuth: true } // 認証が必要なルート
+  },
+  {
+    path: '/reservations/edit/:id', // :id で予約IDをパラメータとして受け取る
+    name: 'ReservationEdit',
+    component: ReservationEditView,
+    meta: { requiresAuth: true },
+    props: true // ルートパラメータをコンポーネントのpropsとして渡す
   },
 
 ];

@@ -34,6 +34,7 @@
         >
           <span class="day-number">{{ day.formattedDate }}</span>
           <div class="reservations-in-day">
+            <!-- フォーカス可能にするため、tabindex="0"を指定 -->
             <div
               v-for="reservation in day.reservations"
               :key="reservation.id"
@@ -41,13 +42,18 @@
               draggable="true"
               @dragstart="handleDragStart(reservation, $event)"
               @mouseover="showActions(reservation.id)"
-              @mouseleave="hideActions(reservation.id)"
+              @mouseleave="startHideActionsTimer(reservation.id)"
+              @focusin="showActions(reservation.id)"
+              @focusout="startHideActionsTimer(reservation.id)"
+              tabindex="0"
             >
               <span class="reservation-title">{{ reservation.title }}</span>
               <span class="reservation-time">{{ reservation.startTime }} - {{ reservation.endTime }}</span>
               <div
-                v-if="hoveredReservationId === reservation.id"
+                v-if="hoveredReservationId === reservation.id || focusedReservationId === reservation.id"
                 class="reservation-actions"
+                @mouseover="clearHideActionsTimer()"
+                @mouseleave="startHideActionsTimer(reservation.id)"
               >
                 <button @click.stop="editReservation(reservation.id)" class="action-btn edit-btn">編集</button>
                 <button @click.stop="confirmDeleteReservation(reservation.id)" class="action-btn delete-btn">削除</button>
@@ -83,13 +89,19 @@ import { ja } from 'date-fns/locale';
 import { useAuthStore } from '../stores/auth'; // 相対パス
 import axios from 'axios';
 
+import { useRouter } from 'vue-router'; // router をインポート
+const routerForEdit = useRouter(); // setup スコープで router インスタンスを取得
+
 const API_BASE_URL = 'http://localhost:3001';
 const authStore = useAuthStore();
 
 const currentMonth = ref(new Date());
 const allUserReservations = ref([]); // ログインユーザーの全予約
 const isLoadingReservations = ref(false);
+
 const hoveredReservationId = ref(null); // ホバー中の予約ID
+const focusedReservationId = ref(null); // フォーカスされている予約ID
+let hideTimer = null; // アクションを非表示にするためのタイマー
 
 const formattedCurrentMonth = computed(() => {
   return format(currentMonth.value, 'yyyy年MM月', { locale: ja });
@@ -171,7 +183,27 @@ const nextMonth = () => {
 };
 
 const showActions = (reservationId) => {
+  clearTimeout(hideTimer); // 非表示タイマーがあればクリア
   hoveredReservationId.value = reservationId;
+  focusedReservationId.value = reservationId; // フォーカスも考慮
+};
+
+const startHideActionsTimer = (reservationId) => {
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => {
+    // マウスが予約アイテム上にもアクションメニュー上にもない場合のみ非表示
+    // (このチェックは複雑になるため、ここでは単純にタイマーで非表示にする)
+    if (hoveredReservationId.value === reservationId) {
+        hoveredReservationId.value = null;
+    }
+    if (focusedReservationId.value === reservationId) {
+        // focusedReservationId.value = null; // フォーカスは明示的に外れるまで維持する方が良い場合もある
+    }
+  }, 200); // 200ms後に非表示 (調整可能)
+};
+
+const clearHideActionsTimer = () => {
+  clearTimeout(hideTimer);
 };
 
 const hideActions = (reservationId) => {
@@ -185,9 +217,7 @@ const hideActions = (reservationId) => {
 
 const editReservation = (reservationId) => {
   console.log('編集する予約ID:', reservationId);
-  // TODO: Vue Routerを使って編集ページに遷移
-  // router.push({ name: 'ReservationEdit', params: { id: reservationId } });
-  alert(`予約ID: ${reservationId} の編集画面へ（未実装）`);
+  routerForEdit.push({ name: 'ReservationEdit', params: { id: reservationId } });
 };
 
 const confirmDeleteReservation = async (reservationId) => {

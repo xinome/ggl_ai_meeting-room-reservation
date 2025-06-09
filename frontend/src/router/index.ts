@@ -27,10 +27,10 @@ const routes = [
   
   // 他のルート...
   {
-    path: '/reservastion',
-    name: 'Reservastion',
+    path: '/calendar-reservation',
+    name: 'CalendarReservation',
     component: CalendarReservationView,
-    meta: { requiresAuth: true }, // 認証が必要なルート
+    meta: { requiresAuth: true } // 認証が必要なルート
   },
 
 ];

@@ -4,7 +4,8 @@
       <nav>
         <router-link to="/">Home</router-link> |
         <template v-if="authStore.isAuthenticated">
-          <router-link to="/dashboard">Dashboard</router-link> |
+          <!-- <router-link to="/dashboard">Dashboard</router-link> | -->
+          <router-link to="/reservasion">会議室予約</router-link> |
           <span>User: {{ authStore.userName }} ({{ authStore.userRole }}) </span>
           <button @click="handleLogout" class="logout-button">Logout</button>
         </template>

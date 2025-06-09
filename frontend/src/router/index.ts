@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
+import CalendarReservationView from '../views/CalendarReservationView.vue';
 import { useAuthStore } from '../stores/auth'; // Piniaストアをインポート
 
 const routes = [
@@ -23,7 +24,15 @@ const routes = [
     component: DashboardView,
     meta: { requiresAuth: true }, // 認証が必要なルート
   },
+  
   // 他のルート...
+  {
+    path: '/reservastion',
+    name: 'Reservastion',
+    component: CalendarReservationView,
+    meta: { requiresAuth: true }, // 認証が必要なルート
+  },
+
 ];
 
 const router = createRouter({

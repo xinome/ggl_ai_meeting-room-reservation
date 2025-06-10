@@ -1,138 +1,292 @@
 <template>
-  <div class="page-container home-view">
-    <header class="page-header">
-      <h1>会議室予約システム ホーム</h1>
-    </header>
-
-    <div v-if="authStore.isAuthenticated" class="content-authenticated">
-      <p class="welcome-message">
-        ようこそ、<strong>{{ authStore.userName }}</strong>さん。
-      </p>
-
-      <!-- ログインユーザーの予約状況 -->
-      <section class="content-section my-reservations-section">
-        <h2><i class="fas fa-calendar-check icon"></i>あなたの予約</h2>
-        <div v-if="isLoadingMyReservations" class="loading-indicator">予約情報を読み込み中...</div>
-        <div v-else-if="myReservations.length > 0" class="reservations-list">
-          <ul class="item-list">
-            <li v-for="reservation in myReservations" :key="reservation.id" class="list-item">
-              <div class="item-main-info">
-                <span class="item-title">{{ reservation.title }}</span>
-                <span class="item-details">
-                  {{ reservation.date }} ({{ reservation.startTime }} - {{ reservation.endTime }})
-                </span>
-              </div>
-              <span class="item-sub-info">会議室: {{ reservation.roomName || 'N/A' }}</span>
-            </li>
-          </ul>
+  <div class="btoc-home-view">
+    <!-- 未ログインユーザー向け表示 -->
+    <div v-if="!authStore.isAuthenticated" class="guest-view">
+      <section class="hero-section">
+        <div class="hero-background">
+          <!-- 背景画像や動画をここに配置 (CSSで設定も可) -->
         </div>
-        <p v-else class="no-data-message">現在、あなたの予約はありません。</p>
+        <div class="hero-content">
+          <h1 class="hero-title">新しい働き方を、ここから始めよう。</h1>
+          <p class="hero-subtitle">
+            あなたのビジネスやプロジェクトに最適な空間を、簡単に見つけて予約。
+          </p>
+          <div class="hero-search-form">
+            <input type="text" placeholder="エリア、駅名、キーワードで検索..." class="hero-search-input" v-model="guestSearchKeyword" @keyup.enter="searchRoomsGuest" />
+            <button @click="searchRoomsGuest" class="hero-search-button">
+              <i class="fas fa-search"></i> 今すぐ探す
+            </button>
+          </div>
+          <router-link to="/login" class="hero-login-link">またはログイン</router-link>
+        </div>
       </section>
 
-      <!-- 会議室一覧 -->
-      <section class="content-section rooms-list-section">
-        <h2><i class="fas fa-door-open icon"></i>会議室一覧</h2>
-        <div v-if="isLoadingRooms" class="loading-indicator">会議室情報を読み込み中...</div>
-        <div v-else-if="rooms.length > 0">
-          <ul class="item-list">
-            <li v-for="room in rooms" :key="room.id" class="list-item room-list-item">
-              <div class="item-main-info">
-                <span class="item-title">{{ room.name }}</span>
-                <span class="item-details">定員: {{ room.capacity }}名</span>
+      <section class="features-section">
+        <h2 class="section-title">会議室予約をもっとスマートに</h2>
+        <div class="features-grid">
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-search-location"></i></div>
+            <h3 class="feature-title">簡単検索</h3>
+            <p class="feature-description">日付、場所、人数で絞り込み。あなたのニーズにぴったりの会議室がすぐに見つかります。</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-calendar-alt"></i></div>
+            <h3 class="feature-title">即時予約</h3>
+            <p class="feature-description">空き状況をリアルタイムで確認。面倒な手続きなしで、その場で予約を確定できます。</p>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-couch"></i></div>
+            <h3 class="feature-title">多様なスペース</h3>
+            <p class="feature-description">少人数ミーティングから大規模セミナーまで。多彩なタイプの会議室をご用意しています。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="popular-rooms-guest">
+        <h2 class="section-title">人気の会議室をチェック</h2>
+        <div v-if="isLoadingRooms" class="loading-indicator">情報を読み込み中...</div>
+        <div v-else class="rooms-grid">
+          <div v-for="room in popularRoomsGuest" :key="room.id" class="room-card-guest">
+            <div class="room-card-image" :style="{ backgroundImage: `url(${getRoomImageUrl(room.id)})` }"></div>
+            <div class="room-card-content">
+              <h3 class="room-card-title">{{ room.name }}</h3>
+              <p class="room-card-capacity">定員: {{ room.capacity }}名</p>
+              <p class="room-card-branch">{{ room.branchName || 'N/A' }}</p>
+              <router-link :to="authStore.isAuthenticated ? `/calendar-reservation` : '/login'" class="room-card-cta">
+                {{ authStore.isAuthenticated ? '予約する' : '詳細・ログインして予約' }}
+              </router-link>
+            </div>
+          </div>
+          <div v-if="!isLoadingRooms && popularRoomsGuest.length === 0" class="no-data-message">
+            現在表示できる人気の会議室はありません。
+          </div>
+        </div>
+         <router-link to="/login" class="cta-button-section guest-more-rooms">
+            もっと会議室を見る (要ログイン) <i class="fas fa-arrow-right"></i>
+        </router-link>
+      </section>
+
+      <section class="cta-section-guest">
+        <h2 class="section-title">準備はできましたか？</h2>
+        <p>今すぐアカウントを作成して、あなたのビジネスを加速させましょう。</p>
+        <router-link to="/register" class="cta-button primary">無料アカウント登録</router-link>
+        <!-- /register ルートがまだなければ、/login にフォールバック -->
+      </section>
+    </div>
+
+    <!-- ログインユーザー向け表示 (既存の機能を活かしつつBtoC風に) -->
+    <div v-if="authStore.isAuthenticated" class="authenticated-view">
+      <header class="page-header-auth">
+        <h1>こんにちは、{{ authStore.userName }}さん！</h1>
+        <p>今日も一日、頑張りましょう。</p>
+      </header>
+
+      <section class="quick-actions-section">
+        <router-link to="/calendar-reservation" class="quick-action-button">
+          <i class="fas fa-calendar-plus"></i> 新規予約作成
+        </router-link>
+        <!-- 他のクイックアクションボタンを追加可能 -->
+      </section>
+
+      <div class="dashboard-grid">
+        <div class="dashboard-main-content">
+          <!-- あなたの次の予約 -->
+          <section class="content-section my-next-reservation-btoc">
+            <h2><i class="fas fa-stopwatch icon"></i> あなたの次の予約</h2>
+            <div v-if="isLoadingMyReservations && nextReservation" class="loading-indicator">予約情報を読み込み中...</div>
+            <div v-else-if="nextReservation" class="next-reservation-card">
+              <div class="reservation-card-header">
+                <h3 class="reservation-card-title">{{ nextReservation.title }}</h3>
+                <span class="reservation-card-status" :class="nextReservation.status">{{ nextReservation.status === 'confirmed' ? '確定済' : '仮予約' }}</span>
               </div>
-              <button @click="showRoomReservations(room)" class="action-button primary-button">
-                <i class="fas fa-eye icon-left"></i>この会議室の予約を見る
+              <p class="reservation-card-detail">
+                <i class="fas fa-calendar-alt"></i> {{ nextReservation.date }} ({{ nextReservation.startTime }} - {{ nextReservation.endTime }})
+              </p>
+              <p class="reservation-card-detail">
+                <i class="fas fa-map-marker-alt"></i> {{ nextReservation.roomName || 'N/A' }}
+              </p>
+              <div class="reservation-card-actions">
+                 <router-link :to="`/reservations/edit/${nextReservation.id}`" class="action-button secondary-button icon-left">
+                  <i class="fas fa-edit"></i> 編集
+                </router-link>
+                <router-link to="/calendar-reservation" class="action-button primary-button icon-left">
+                  <i class="fas fa-calendar-day"></i> すべての予約を見る
+                </router-link>
+              </div>
+            </div>
+            <p v-else-if="!isLoadingMyReservations" class="no-data-message">今後の予約はありません。</p>
+          </section>
+
+          <!-- 会議室クイック検索 (ログインユーザー向け) -->
+          <section class="content-section room-quick-search-btoc">
+             <h2><i class="fas fa-search icon"></i> 会議室を検索</h2>
+            <div class="quick-search-form">
+                <input type="date" v-model="quickSearchDate" class="form-control">
+                <select v-model="quickSearchBranchId" class="form-control">
+                    <option value="">全ての支店</option>
+                    <option v-for="branch in branches" :key="branch.id" :value="branch.id">{{branch.name}}</option>
+                </select>
+                <button @click="searchRoomsAuthenticated" class="action-button primary-button">
+                    <i class="fas fa-search"></i> 検索
+                </button>
+            </div>
+            <!-- 検索結果表示エリア (今回は省略) -->
+          </section>
+        </div>
+
+        <aside class="dashboard-sidebar">
+           <!-- 最近利用した会議室 (既存のroomsから数件表示) -->
+          <section class="content-section recent-rooms-btoc">
+            <h3><i class="fas fa-history icon"></i> 最近チェックした会議室</h3>
+            <div v-if="isLoadingRooms" class="loading-indicator">読み込み中...</div>
+            <ul v-else-if="recentRooms.length > 0" class="simple-list">
+              <li v-for="room in recentRooms" :key="room.id">
+                <router-link :to="`/rooms/${room.id}`"> <!-- room詳細ページがあれば -->
+                  {{ room.name }} ({{ room.branchName }})
+                </router-link>
+              </li>
+            </ul>
+            <p v-else class="no-data-message">履歴はありません。</p>
+          </section>
+          <!-- (既存の「選択した会議室の予約状況」はカレンダーページに集約する想定) -->
+        </aside>
+      </div>
+
+       <!-- 既存の会議室一覧表示（スタイル調整） -->
+      <section class="content-section rooms-list-section-btoc">
+        <h2><i class="fas fa-door-open icon"></i>すべての会議室</h2>
+        <div v-if="isLoadingRooms" class="loading-indicator">情報を読み込み中...</div>
+        <div v-else-if="rooms.length > 0" class="rooms-grid">
+           <div v-for="room in rooms" :key="room.id" class="room-card-auth">
+            <div class="room-card-image" :style="{ backgroundImage: `url(${getRoomImageUrl(room.id)})` }"></div>
+            <div class="room-card-content">
+              <h3 class="room-card-title">{{ room.name }}</h3>
+              <p class="room-card-capacity">定員: {{ room.capacity }}名</p>
+              <p class="room-card-branch">{{ room.branchName || 'N/A' }}</p>
+               <button @click="showRoomReservations(room)" class="room-card-cta">
+                <i class="fas fa-eye"></i> この会議室の予約を見る
               </button>
-            </li>
-          </ul>
+            </div>
+          </div>
         </div>
         <p v-else class="no-data-message">利用可能な会議室はありません。</p>
       </section>
 
-      <!-- 選択した会議室の予約状況 -->
-      <section v-if="selectedRoom" class="content-section selected-room-reservations-section">
-        <h3>
-          <i class="fas fa-calendar-day icon"></i>
-          「{{ selectedRoom.name }}」の予約状況
-        </h3>
-        <div class="date-selector form-group">
-          <label for="room-reservation-date">日付を選択:</label>
-          <input type="date" id="room-reservation-date" v-model="selectedDateForRoom" @change="fetchRoomReservationsDebounced" class="form-control">
-        </div>
-        <div v-if="isLoadingRoomReservations" class="loading-indicator">予約情報を読み込み中...</div>
-        <div v-else-if="roomReservations.length > 0" class="reservations-list">
-          <ul class="item-list">
-            <li v-for="reservation in roomReservations" :key="reservation.id" class="list-item">
-               <div class="item-main-info">
-                <span class="item-title">{{ reservation.title }}</span>
-                <span class="item-details">
-                  {{ reservation.startTime }} - {{ reservation.endTime }}
-                </span>
-              </div>
-              <span class="item-sub-info">予約者: {{ reservation.userName || (reservation.attendeeNames?.join(', ') || '情報なし') }}</span>
-            </li>
-          </ul>
-        </div>
-        <p v-else class="no-data-message">選択された日付に、この会議室の予約はありません。</p>
-      </section>
-    </div>
-
-    <div v-else class="content-guest">
-      <div class="guest-message-box">
-        <h2>会議室予約システムへようこそ！</h2>
-        <p>
-          会議室の空き状況の確認、予約の作成・編集・削除が簡単に行えます。
-        </p>
-        <p>
-          ご利用いただくには<router-link to="/login" class="login-link">ログイン</router-link>してください。
-        </p>
-        <router-link to="/login" class="action-button primary-button large-button">
-          <i class="fas fa-sign-in-alt icon-left"></i>ログインページへ
-        </router-link>
-      </div>
-    </div>
+    </div> <!-- authenticated-view end -->
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
-import { useAuthStore } from '../stores/auth'; // 相対パスに修正済み
-import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/auth'; // 相対パス
+import { useRouter } // useRouter をインポート
+from 'vue-router';
 import axios from 'axios';
+import { format, parseISO, isFuture, isToday as dfIsToday } from 'date-fns';
+
 
 const API_BASE_URL = 'http://localhost:3001';
 
 const authStore = useAuthStore();
-const router = useRouter(); // 現状未使用ですが、将来的なナビゲーションのために残しておきます
+const router = useRouter();
 
-const myReservations = ref([]);
+// --- 共通 ---
 const rooms = ref([]);
-const allUsers = ref([]); // ユーザー名参照用
-const selectedRoom = ref(null);
-const roomReservations = ref([]);
-const selectedDateForRoom = ref(new Date().toISOString().split('T')[0]);
-
-const isLoadingMyReservations = ref(false);
+const branches = ref([]);
 const isLoadingRooms = ref(false);
-const isLoadingRoomReservations = ref(false);
+const getRoomImageUrl = (roomId) => { // ダミー画像URL生成
+  // 実際のプロジェクトでは会議室ごとの画像URLをDBなどから取得
+  const placeholderBase = 'https://via.placeholder.com/300x200.png?text=Room+';
+  return `${placeholderBase}${roomId.substring(roomId.length - 1)}`; // ID末尾で変化
+};
 
-const isLoggedIn = computed(() => authStore.isAuthenticated);
 
-// --- APIコール関数 ---
-const fetchAllUsersInternal = async () => {
-  if (!authStore.token || allUsers.value.length > 0) return; // 既に取得済みならスキップ
+// --- 未ログインユーザー向け ---
+const guestSearchKeyword = ref('');
+const popularRoomsGuest = ref([]);
+
+const searchRoomsGuest = () => {
+  if (!guestSearchKeyword.value.trim()) {
+    alert('検索キーワードを入力してください。');
+    return;
+  }
+  // 実際にはAPIを叩くか、ログインを促す
+  alert(`「${guestSearchKeyword.value}」で検索 (未実装)。ログインして詳細検索をご利用ください。`);
+  router.push('/login');
+};
+
+const fetchPopularRoomsGuest = async () => {
+    if (rooms.value.length > 0) { // 既に全会議室データがあればそれを利用
+        popularRoomsGuest.value = rooms.value.slice(0, 3).map(room => ({
+            ...room,
+            branchName: branches.value.find(b => b.id === room.branchId)?.name
+        }));
+        return;
+    }
+  isLoadingRooms.value = true; // roomsがまだない場合
   try {
-    const response = await axios.get(`${API_BASE_URL}/users`, {
-      headers: { Authorization: `Bearer ${authStore.token}` },
-    });
-    allUsers.value = response.data;
+    // ログインしていなくても見れる人気会議室APIがあると良いが、今回は既存の/roomsを利用
+    const roomsResponse = await axios.get(`${API_BASE_URL}/rooms`);
+    const branchesResponse = await axios.get(`${API_BASE_URL}/branches`);
+    branches.value = branchesResponse.data;
+    rooms.value = roomsResponse.data;
+
+    popularRoomsGuest.value = rooms.value.slice(0, 3).map(room => ({ // 先頭3件を「人気」とする
+      ...room,
+      branchName: branches.value.find(b => b.id === room.branchId)?.name
+    }));
   } catch (error) {
-    console.error('全ユーザー情報取得に失敗:', error);
+    console.error('人気会議室情報取得に失敗:', error);
+  } finally {
+    isLoadingRooms.value = false;
   }
 };
 
 
-const fetchMyReservations = async () => {
+// --- ログインユーザー向け ---
+const myReservations = ref([]);
+const isLoadingMyReservations = ref(false);
+const quickSearchDate = ref(format(new Date(), 'yyyy-MM-dd'));
+const quickSearchBranchId = ref('');
+const allUsers = ref([]); // 既存のコードから (必要なら)
+const selectedRoom = ref(null); // 既存のコードから (必要なら)
+const roomReservations = ref([]); // 既存のコードから (必要なら)
+const selectedDateForRoom = ref(format(new Date(), 'yyyy-MM-dd')); // 既存のコードから (必要なら)
+
+
+const nextReservation = computed(() => {
+  if (!myReservations.value || myReservations.value.length === 0) return null;
+  return myReservations.value
+    .filter(res => dfIsToday(parseISO(res.date)) || isFuture(parseISO(res.date))) // 今日以降の予約
+    .sort((a, b) => new Date(a.date + 'T' + a.startTime) - new Date(b.date + 'T' + b.startTime)) // 日時でソート
+    [0]; // 最も近い予約
+});
+
+const recentRooms = computed(() => { // ダミーで全会議室の先頭2件
+    return rooms.value.slice(0, 2).map(room => ({
+        ...room,
+        branchName: branches.value.find(b => b.id === room.branchId)?.name
+    }));
+});
+
+const fetchRoomsAndBranchesAuth = async () => {
+    if (!authStore.token) return;
+    isLoadingRooms.value = true;
+    try {
+        const [roomsRes, branchesRes] = await Promise.all([
+            axios.get(`${API_BASE_URL}/rooms`, { headers: { Authorization: `Bearer ${authStore.token}` } }),
+            axios.get(`${API_BASE_URL}/branches`, { headers: { Authorization: `Bearer ${authStore.token}` } })
+        ]);
+        rooms.value = roomsRes.data;
+        branches.value = branchesRes.data;
+    } catch (error) {
+        console.error('会議室または支店情報の取得に失敗 (Auth):', error);
+    } finally {
+        isLoadingRooms.value = false;
+    }
+};
+
+const fetchMyReservationsAuth = async () => {
   if (!authStore.user?.id || !authStore.token) return;
   isLoadingMyReservations.value = true;
   try {
@@ -143,311 +297,403 @@ const fetchMyReservations = async () => {
       .filter(res => res.userId === authStore.user.id)
       .map(res => ({
         ...res,
-        roomName: rooms.value.find(room => room.id === res.roomId)?.name || 'N/A',
+        roomName: rooms.value.find(room => room.id === res.roomId)?.name || 'N/A', // 会議室名を追加
       }));
   } catch (error) {
-    console.error('自分の予約取得に失敗:', error);
-    myReservations.value = [];
+    console.error('自分の予約取得に失敗 (Auth):', error);
   } finally {
     isLoadingMyReservations.value = false;
   }
 };
 
-const fetchRooms = async () => {
-  if (!authStore.token) return;
-  isLoadingRooms.value = true;
-  try {
-    const response = await axios.get(`${API_BASE_URL}/rooms`, {
-      headers: { Authorization: `Bearer ${authStore.token}` },
-    });
-    rooms.value = response.data;
-  } catch (error) {
-    console.error('会議室一覧取得に失敗:', error);
-    rooms.value = [];
-  } finally {
-    isLoadingRooms.value = false;
-  }
-};
-
-const fetchRoomReservations = async () => {
-  if (!selectedRoom.value?.id || !authStore.token) return;
-  isLoadingRoomReservations.value = true;
-  try {
-    await fetchAllUsersInternal(); // 予約者名表示のためにユーザー情報を確認・取得
-    const response = await axios.get(`${API_BASE_URL}/reservations`, {
-      headers: { Authorization: `Bearer ${authStore.token}` },
-      params: {
-        roomId: selectedRoom.value.id,
-        date: selectedDateForRoom.value,
-      },
-    });
-    // モックAPIが roomId と date でフィルタリングしてくれることを期待
-    // attendeeNames があればそれを使用し、なければ allUsers から引く
-    roomReservations.value = response.data.map(res => {
-      let userNameDisplay = '予約者情報なし';
-      if (res.attendeeNames && res.attendeeNames.length > 0) {
-        userNameDisplay = res.attendeeNames.join(', ');
-      } else if (res.userId) {
-        const user = allUsers.value.find(u => u.id === res.userId);
-        if (user) {
-            userNameDisplay = user.name;
+const searchRoomsAuthenticated = () => {
+    // 検索条件 (quickSearchDate, quickSearchBranchId) を使ってカレンダー予約画面に遷移
+    // または、この画面内で結果を表示する
+    router.push({
+        name: 'CalendarReservation', // カレンダー予約画面のルート名
+        query: {
+            date: quickSearchDate.value,
+            branch: quickSearchBranchId.value
         }
-      }
-      return { ...res, userName: userNameDisplay };
     });
-  } catch (error) {
-    console.error(`「${selectedRoom.value.name}」の予約取得に失敗:`, error);
-    roomReservations.value = [];
-  } finally {
-    isLoadingRoomReservations.value = false;
-  }
 };
 
-let debounceTimer;
-const fetchRoomReservationsDebounced = () => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => {
-    fetchRoomReservations();
-  }, 300);
-};
+// 既存の showRoomReservations, fetchRoomReservationsDebounced などはカレンダーページに移管済み、またはこのページでは不要なら削除
 
-const showRoomReservations = (room) => {
-  selectedRoom.value = room;
-  // selectedDateForRoom.value = new Date().toISOString().split('T')[0]; // 必要なら日付をリセット
-  fetchRoomReservations(); // 日付選択の変更を待たずに初期表示
-};
 
 // --- ライフサイクル & ウォッチャー ---
 const loadInitialData = async () => {
-    if (authStore.isAuthenticated) {
-        await fetchAllUsersInternal(); // 最初にユーザー情報を取得
-        await fetchRooms(); // 次に会議室情報
-        if (rooms.value.length > 0 || !isLoadingRooms.value) { // 会議室取得後
-            await fetchMyReservations(); // 自分の予約を取得
-        }
-    }
+  if (authStore.isAuthenticated) {
+    await fetchRoomsAndBranchesAuth();
+    await fetchMyReservationsAuth();
+  } else {
+    // 未ログイン時は人気会議室などを表示
+    await fetchPopularRoomsGuest();
+  }
 };
 
 onMounted(loadInitialData);
 
-watch(isLoggedIn, (newValue, oldValue) => {
-  if (newValue && !oldValue) { // ログイン時
-    loadInitialData();
-  } else if (!newValue && oldValue) { // ログアウト時
-    myReservations.value = [];
-    rooms.value = [];
-    allUsers.value = [];
-    selectedRoom.value = null;
-    roomReservations.value = [];
-    // ローディングフラグもリセット
-    isLoadingMyReservations.value = false;
-    isLoadingRooms.value = false;
-    isLoadingRoomReservations.value = false;
-  }
+watch(() => authStore.isAuthenticated, (isAuth) => {
+  // ログイン状態が変更されたらデータを再読み込み
+  loadInitialData();
 });
 
-// watch(selectedRoom, ...) は不要になりました。showRoomReservationsで直接呼ぶため。
 </script>
 
 <style scoped>
-/* FontAwesomeなどのアイコンフォントをインポートしている前提 */
-/* @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'); */
-
-.page-container {
-  max-width: 900px; /* 少し広めに */
-  margin: 20px auto; /* 上マージン追加 */
-  padding: 20px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* 基本スタイル */
+.btoc-home-view {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
   color: #333;
-  background-color: #f4f7f6; /* 全体の背景色を少し設定 */
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  line-height: 1.6;
 }
-
-.page-header {
+.section-title {
   text-align: center;
-  border-bottom: 2px solid #007bff; /* App.vue のスタイルに合わせるか、独自にするか */
-  margin-bottom: 30px;
+  font-size: 2em;
+  color: #2c3e50;
+  margin-bottom: 40px;
+  font-weight: 300;
+  position: relative;
   padding-bottom: 15px;
 }
-
-.page-header h1 {
-  color: #0056b3; /* 少し濃い青 */
-  font-size: 2.2em;
-  font-weight: 600;
-  margin: 0;
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background-color: #3498db;
 }
-
-.welcome-message {
-  font-size: 1.3em;
-  margin-bottom: 25px;
-  color: #28a745; /* 少し緑がかった色 */
-  text-align: center;
-  padding: 10px;
-  background-color: #e9f5e9;
-  border-radius: 6px;
-}
-.welcome-message strong {
-  font-weight: 600;
-}
-
-.content-section {
-  background-color: #ffffff;
-  border: 1px solid #d1d9e0;
-  border-radius: 8px;
-  padding: 25px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.content-section h2, .content-section h3 {
-  font-size: 1.6em; /* 少し大きめ */
-  color: #0056b3;
-  margin-top: 0;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0;
-  display: flex;
-  align-items: center;
-}
-.content-section h3 {
-  font-size: 1.4em;
-}
-
-.icon {
-  margin-right: 10px;
-  color: #007bff; /* アイコンの色 */
-}
-.icon-left {
-  margin-right: 6px;
-}
-
 .loading-indicator, .no-data-message {
-  color: #6c757d;
-  font-style: italic;
-  padding: 15px 5px;
   text-align: center;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  margin-top: 10px;
+  padding: 20px;
+  color: #7f8c8d;
 }
-
-.item-list {
-  list-style: none;
-  padding-left: 0;
-}
-
-.list-item {
-  padding: 15px 10px;
-  border-bottom: 1px solid #e9ecef;
-  display: flex;
-  flex-direction: column; /* デフォルトを縦並びに */
-  gap: 5px; /* 要素間の隙間 */
-}
-.list-item:last-child {
-  border-bottom: none;
-}
-.room-list-item {
-    flex-direction: row; /* 会議室一覧は横並びを維持 */
-    justify-content: space-between;
-    align-items: center;
-}
-
-.item-main-info {
-  display: flex;
-  flex-direction: column; /* タイトルと詳細を縦に */
-  flex-grow: 1;
-}
-.item-title {
-  font-weight: 600;
-  color: #343a40;
-  font-size: 1.1em;
-  margin-bottom: 3px;
-}
-.item-details {
-  font-size: 0.9em;
-  color: #495057;
-}
-.item-sub-info {
-  font-size: 0.85em;
-  color: #6c757d;
-  margin-top: 4px;
-}
-
-
-.action-button {
-  padding: 8px 15px;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease;
-  font-size: 0.95em;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.action-button:hover {
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-.primary-button {
-  background-color: #007bff;
-}
-.primary-button:hover {
-  background-color: #0069d9;
-}
-.large-button {
+.action-button, .cta-button, .hero-search-button, .room-card-cta {
+  display: inline-block;
   padding: 12px 25px;
-  font-size: 1.1em;
-}
-
-
-.form-group {
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.form-group label {
-  font-weight: 500;
-  white-space: nowrap; /* ラベルが折り返さないように */
-}
-.form-control { /* input[type="date"] などに適用 */
-  padding: 10px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 1em;
-  flex-grow: 1; /* 入力欄がスペースを埋めるように */
-}
-
-
-.content-guest {
-  text-align: center;
-  padding: 40px 20px;
-}
-.guest-message-box {
-  background-color: #e9f7ff;
-  border: 1px solid #bce0fd;
-  padding: 30px;
-  border-radius: 8px;
-  display: inline-block; /* 中央寄せのため */
-  box-shadow: 0 4px 10px rgba(0,0,0,0.07);
-}
-.guest-message-box h2 {
-  font-size: 1.8em;
-  color: #004085;
-  margin-bottom: 15px;
-}
-.guest-message-box p {
-  font-size: 1.1em;
-  color: #1c4a73;
-  line-height: 1.6;
-  margin-bottom: 20px;
-}
-.login-link {
-  color: #0056b3;
+  border: none;
+  border-radius: 25px; /* 丸みを帯びたボタン */
+  cursor: pointer;
   font-weight: bold;
   text-decoration: none;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  font-size: 1em;
 }
-.login-link:hover {
+.action-button:hover, .cta-button:hover, .hero-search-button:hover, .room-card-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+.primary-button, .hero-search-button, .cta-button.primary {
+  background-color: #3498db;
+  color: white;
+}
+.primary-button:hover, .hero-search-button:hover, .cta-button.primary:hover {
+  background-color: #2980b9;
+}
+.secondary-button {
+  background-color: #ecf0f1;
+  color: #2c3e50;
+  border: 1px solid #bdc3c7;
+}
+.secondary-button:hover {
+  background-color: #dadedf;
+}
+.icon-left .fas { margin-right: 8px;}
+
+
+/* 未ログイン時: Hero Section */
+.hero-section {
+  position: relative;
+  height: 70vh; /* ビューポートの高さの70% */
+  min-height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  overflow: hidden; /* 背景がはみ出ないように */
+}
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://images.unsplash.com/photo-1505373877841-8d25f7d46678?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1100&q=80'); /* フリー素材例 */
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.6); /* 少し暗くして文字を見やすく */
+  z-index: 1;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  padding: 20px;
+  max-width: 700px;
+}
+.hero-title {
+  font-size: 3.2em;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+.hero-subtitle {
+  font-size: 1.4em;
+  margin-bottom: 30px;
+  font-weight: 300;
+  opacity: 0.9;
+}
+.hero-search-form {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+  background-color: rgba(255,255,255,0.15);
+  padding: 15px;
+  border-radius: 30px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hero-search-input {
+  flex-grow: 1;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 20px;
+  font-size: 1em;
+  background-color: white;
+  color: #333;
+}
+.hero-login-link {
+  color: #f1c40f; /* 目立つ色 */
   text-decoration: underline;
+  font-weight: bold;
 }
+
+/* 未ログイン時: Features Section */
+.features-section {
+  padding: 60px 20px;
+  background-color: #f9f9f9;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.feature-item {
+  text-align: center;
+  padding: 25px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+}
+.feature-icon {
+  font-size: 2.5em;
+  color: #3498db;
+  margin-bottom: 15px;
+}
+.feature-title {
+  font-size: 1.5em;
+  color: #2c3e50;
+  margin-bottom: 10px;
+}
+.feature-description {
+  font-size: 0.95em;
+  color: #555;
+}
+
+/* 未ログイン時: 人気の会議室 / CTA */
+.popular-rooms-guest, .cta-section-guest {
+  padding: 60px 20px;
+  text-align: center;
+}
+.cta-section-guest p {
+  font-size: 1.2em;
+  margin-bottom: 30px;
+  color: #555;
+}
+.guest-more-rooms {
+    margin-top: 30px;
+    font-size: 1.1em;
+    color: #3498db;
+    text-decoration: none;
+    font-weight: 500;
+}
+.guest-more-rooms:hover { color: #2980b9; }
+
+/* ログイン時: 全体 */
+.authenticated-view {
+  padding: 20px;
+}
+.page-header-auth {
+  text-align: left;
+  margin-bottom: 30px;
+  padding: 15px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border-radius: 8px;
+}
+.page-header-auth h1 { font-size: 2em; margin-bottom: 5px;}
+.page-header-auth p { font-size: 1.1em; opacity: 0.9; margin:0;}
+
+.quick-actions-section {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+    justify-content: flex-start; /* 左寄せ */
+}
+.quick-action-button {
+    background-color: #28a745;
+    color: white;
+    padding: 12px 20px;
+}
+.quick-action-button:hover { background-color: #218838; }
+
+
+/* ログイン時: ダッシュボードグリッド */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* スマホでは1カラム */
+  gap: 30px;
+}
+@media (min-width: 992px) { /* PCではサイドバーあり */
+  .dashboard-grid {
+    grid-template-columns: 2fr 1fr; /* メインコンテンツとサイドバー */
+  }
+}
+.content-section {
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 25px;
+  margin-bottom: 20px; /* グリッドアイテムとしてのマージン */
+}
+.content-section h2, .content-section h3 {
+  font-size: 1.4em;
+  color: #333;
+  margin-top: 0;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+.content-section h3 { font-size: 1.2em; }
+
+
+/* ログイン時: あなたの次の予約 */
+.my-next-reservation-btoc .next-reservation-card {
+  background-color: #e9f7ff;
+  border: 1px solid #bce0fd;
+  border-radius: 6px;
+  padding: 20px;
+}
+.reservation-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.reservation-card-title { font-size: 1.3em; color: #004085; margin:0;}
+.reservation-card-status {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 0.8em;
+  font-weight: bold;
+}
+.reservation-card-status.confirmed { background-color: #28a745; color: white;}
+.reservation-card-status.tentative { background-color: #ffc107; color: #333;}
+.reservation-card-detail { margin: 8px 0; color: #1c4a73; }
+.reservation-card-detail .fas { margin-right: 8px; color: #0056b3;}
+.reservation-card-actions { margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;}
+
+
+/* ログイン時: 会議室クイック検索 */
+.quick-search-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.quick-search-form .form-control {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-grow: 1;
+}
+.quick-search-form select.form-control { flex-grow: 0.5; } /* 支店選択は少し狭く */
+
+
+/* ログイン時: 最近利用した会議室 */
+.simple-list { list-style: none; padding-left: 0; }
+.simple-list li { padding: 8px 0; border-bottom: 1px dashed #eee; }
+.simple-list li:last-child { border-bottom: none; }
+.simple-list li a { color: #007bff; text-decoration: none; }
+.simple-list li a:hover { text-decoration: underline; }
+
+/* 会議室カード (ログイン時・未ログイン時共通部分) */
+.rooms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-top: 20px;
+}
+.room-card-guest, .room-card-auth {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+  overflow: hidden; /* 画像のはみ出し防止 */
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.room-card-guest:hover, .room-card-auth:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+.room-card-image {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+}
+.room-card-content {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+.room-card-title {
+  font-size: 1.3em;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+.room-card-capacity, .room-card-branch {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 5px;
+}
+.room-card-branch .fas { margin-right: 5px;}
+.room-card-cta {
+  margin-top: auto; /* ボタンを下部に配置 */
+  background-color: #5cb85c;
+  color: white;
+  text-align: center;
+  padding: 10px 15px;
+  border-radius: 5px;
+}
+.room-card-cta:hover {
+  background-color: #4cae4c;
+}
+/* FontAwesome アイコン用のプレースホルダー */
+.fas {
+  /* スタイルは適宜調整 */
+}
+
 </style>

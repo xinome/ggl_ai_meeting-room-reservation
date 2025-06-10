@@ -6,6 +6,7 @@
     "location": "本社ビル 2F",
     "description": "プロジェクター、ホワイトボード完備",
     "branchId": "b-001",
+    "branchName": "本社",
     "equipmentIds": ["eq-001", "eq-002"],
     "createdAt": "2023-01-01T00:00:00Z",
     "updatedAt": "2023-01-01T00:00:00Z"
@@ -17,6 +18,7 @@
     "location": "本社ビル 2F",
     "description": "小規模ミーティング用",
     "branchId": "b-001",
+    "branchName": "本社",
     "equipmentIds": ["eq-002"],
     "createdAt": "2023-01-01T00:00:00Z",
     "updatedAt": "2023-01-05T15:00:00Z"
@@ -28,6 +30,7 @@
     "location": "本社ビル 1F",
     "description": "来客用",
     "branchId": "b-001",
+    "branchName": "本社",
     "equipmentIds": [],
     "createdAt": "2023-01-01T00:00:00Z",
     "updatedAt": "2023-01-01T00:00:00Z"
@@ -39,6 +42,7 @@
     "location": "大阪支社 5F",
     "description": "プロジェクター、マイク設備あり",
     "branchId": "b-002",
+    "branchName": "大阪支社",
     "equipmentIds": ["eq-001", "eq-003"],
     "createdAt": "2023-02-01T00:00:00Z",
     "updatedAt": "2023-02-01T00:00:00Z"

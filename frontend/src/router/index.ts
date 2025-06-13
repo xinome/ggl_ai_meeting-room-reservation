@@ -6,6 +6,9 @@ import DashboardView from '../views/DashboardView.vue';
 import CalendarReservationView from '../views/CalendarReservationView.vue';
 import ReservationEditView from '../views/ReservationEditView.vue';
 
+import RoomDetailView from '../views/RoomDetailView.vue'; // 新規追加
+import ReservationCreateView from '../views/ReservationCreateView.vue'; // 新規追加
+
 import { useAuthStore } from '../stores/auth'; // Piniaストアをインポート
 
 const routes = [
@@ -40,6 +43,21 @@ const routes = [
     component: ReservationEditView,
     meta: { requiresAuth: true },
     props: true // ルートパラメータをコンポーネントのpropsとして渡す
+  },
+
+  {
+    path: '/rooms/:id', // :id で会議室IDをパラメータとして受け取る
+    name: 'RoomDetail',
+    component: RoomDetailView,
+    meta: { requiresAuth: true },
+    props: true // ルートパラメータをコンポーネントのpropsとして渡す
+  },
+  {
+    path: '/reservations/new',
+    name: 'ReservationCreate',
+    component: ReservationCreateView,
+    meta: { requiresAuth: true },
+    // props: route => ({ date: route.query.date, roomId: route.query.roomId }) // カレンダーから渡す場合など
   },
 
 ];

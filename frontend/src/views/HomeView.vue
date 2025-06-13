@@ -82,7 +82,7 @@
       </header>
 
       <section class="quick-actions-section">
-        <router-link to="/calendar-reservation" class="quick-action-button">
+        <router-link to="reservations/new" class="quick-action-button">
           <i class="fas fa-calendar-plus"></i> 新規予約作成
         </router-link>
         <!-- 他のクイックアクションボタンを追加可能 -->

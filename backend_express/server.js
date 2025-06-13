@@ -121,11 +121,19 @@ app.post('/users', (req, res) => {
 app.get('/rooms', (req, res) => {
     res.status(200).json(mockRooms);
 });
+
 // GET /rooms/:id (特定会議室取得)
 app.get('/rooms/:id', (req, res) => {
     const room = mockRooms.find(r => r.id === req.params.id);
     if (room) {
-        res.status(200).json(room);
+        // 備品情報をルックアップして追加
+        const roomWithEquipment = {
+            ...room,
+            equipments: room.equipmentIds
+                ? room.equipmentIds.map(eqId => mockEquipment.find(eq => eq.id === eqId)).filter(Boolean) // filter(Boolean) で undefined を除去
+                : []
+        };
+        res.status(200).json(roomWithEquipment);
     } else {
         res.status(404).json({ message: 'Room not found' });
     }

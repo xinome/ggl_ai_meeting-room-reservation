@@ -10,11 +10,15 @@
 ## 技術スタック
 
 - フロントエンド
-  - Vue3, Vite、Pinia
+  - フレームワーク: [Vue 3](https://ja.vuejs.org/)
+  - パッケージソフト: [Vite](https://ja.vite.dev/)
+  - 状態管理: [Pinia](https://pinia.vuejs.org/)
 - バックエンド
-  - Node.js（ネイティブ）→Expressに変更
+  - フレームワーク: [Node.js（ネイティブ）](https://nodejs.org/ja)
+    - →[Express](https://expressjs.com/ja/)に変更
+    
 - インフラ
-  - 擬似モックデータを使用
+  - 擬似モックデータを使用(JSON)
 
 ## ファイル構成
 

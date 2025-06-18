@@ -122,7 +122,7 @@ app.get('/rooms', (req, res) => {
     res.status(200).json(mockRooms);
 });
 
-// GET /rooms/:id (特定会議室取得)
+// GET /rooms/:id (特定会議室取得 - 備品情報付きに修正)
 app.get('/rooms/:id', (req, res) => {
     const room = mockRooms.find(r => r.id === req.params.id);
     if (room) {
@@ -146,30 +146,26 @@ app.get('/reservations', (req, res) => {
     res.status(200).json(mockReservations);
 });
 
-// GET /reservations/room/:roomId (特定会議室の予約取得)
+// (新規) GET /reservations/room/:roomId?date=YYYY-MM-DD (特定会議室の特定日の予約一覧)
 app.get('/reservations/room/:roomId', (req, res) => {
     const { roomId } = req.params;
-    const { date } = req.query;
-
-    console.log(`[GET /reservations/room/:roomId] roomId: ${roomId}, date: ${date}`); // ★デバッグログ追加
+    const { date } = req.query; // date は YYYY-MM-DD 形式を期待
 
     if (!roomId) {
         return res.status(400).json({ message: 'Room ID is required' });
     }
-    if (!date) { // dateが必須の場合
+    if (!date) {
         return res.status(400).json({ message: 'Date query parameter is required' });
     }
-    // ... (以降の処理は前回提示したもの)
+
     const roomExists = mockRooms.some(room => room.id === roomId);
     if (!roomExists) {
-        console.log(`[GET /reservations/room/:roomId] Room not found: ${roomId}`);
-        return res.status(404).json({ message: 'Room not found (in reservations/room check)' });
+        return res.status(404).json({ message: 'Room not found' });
     }
 
     const reservationsForRoomOnDate = mockReservations.filter(
-        reservation => reservation.roomId === roomId && reservation.date === date
+        res => res.roomId === roomId && res.date === date
     );
-    console.log(`[GET /reservations/room/:roomId] Found reservations:`, reservationsForRoomOnDate.length);
     res.status(200).json(reservationsForRoomOnDate);
 });
 
@@ -183,18 +179,56 @@ app.get('/reservations/:id', (req, res) => {
     }
 });
 
-// POST /reservations (予約作成)
+// POST /reservations (予約作成 - バリデーション強化)
 app.post('/reservations', (req, res) => {
+    const { title, date, startTime, endTime, roomId, description, attendees, status } = req.body;
+    const userIdFromToken = req.userId; // ★認証ミドルウェアから取得する想定（後述）
+
+    // 1. 必須項目チェック
+    if (!title || !date || !startTime || !endTime || !roomId || !userIdFromToken) {
+        return res.status(400).json({ message: 'Missing required fields (title, date, startTime, endTime, roomId, userId)' });
+    }
+
+    // 2. 時刻の整合性 (簡易チェック、実際はdate-fnsなどで正確に比較)
+    if (startTime >= endTime) {
+        return res.status(400).json({ message: 'End time must be after start time' });
+    }
+
+    // 3. 会議室の存在確認
+    const roomExists = mockRooms.some(room => room.id === roomId);
+    if (!roomExists) {
+        return res.status(404).json({ message: 'Room not found' });
+    }
+
+    // 4. 予約の重複チェック (同じ会議室、同じ日付、時間帯の重複)
+    const conflictingReservation = mockReservations.find(res =>
+        res.roomId === roomId &&
+        res.date === date &&
+        // 時間帯の重複ロジック (簡易版: 開始時刻または終了時刻が既存の予約時間内に入るか)
+        // (A.start < B.end) && (A.end > B.start)
+        (startTime < res.endTime && endTime > res.startTime)
+    );
+
+    if (conflictingReservation) {
+        return res.status(409).json({ message: 'Time slot conflict. The room is already booked for the selected time.' });
+    }
+
     const newReservation = {
         id: `res-${Date.now()}`,
-        ...req.body,
-        status: req.body.status || 'tentative',
+        title,
+        date,
+        startTime,
+        endTime,
+        roomId,
+        userId: userIdFromToken,
+        description: description || '',
+        attendees: attendees || [],
+        status: status || 'confirmed', // デフォルトは 'confirmed'
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
     };
     mockReservations.push(newReservation);
-    // 元の予約データにはattendeeNamesがないので、もしあればそれを使うか、
-    // attendees (ID配列) からユーザー名を取得して含める処理が必要だが、モックなので簡略化
+    console.log('New reservation created:', newReservation);
     res.status(201).json(newReservation);
 });
 
@@ -241,6 +275,37 @@ app.delete('/reservations/:id', (req, res) => {
         res.status(404).json({ message: 'Reservation not found for deletion' });
     }
 });
+
+// ★認証ミドルウェアの簡単な例 (全ての /api ルートに適用する場合など)
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (token == null) {
+        // 予約作成など、認証必須のAPIでは401を返す
+        // GET系で未認証でも一部情報を見せる場合は next() を呼ぶか、分岐する
+        // 今回は予約作成にユーザーIDが必要なので、未認証はエラーとする
+        if (req.method === 'POST' && req.path.startsWith('/reservations')) {
+             return res.sendStatus(401); // Unauthorized
+        }
+        return next(); // 他のルートは認証なしで許可 (デモ用)
+    }
+
+    // モックトークンの検証 (簡易版)
+    if (token.startsWith('mock-jwt-token-for-')) {
+        const userId = token.split('-')[4]; // 'mock-jwt-token-for-u-001-timestamp' の u-001 部分
+        if (mockUsers.some(u => u.id === userId)) {
+            req.userId = userId; // リクエストオブジェクトにユーザーIDをセット
+            return next();
+        }
+    }
+    return res.sendStatus(403); // Forbidden (トークンが無効)
+};
+
+// 認証ミドルウェアを予約関連のAPIパスに適用 (または全体に)
+// app.use('/api', authenticateToken); // 例: /api で始まる全ルート
+app.use('/reservations', authenticateToken); // /reservations で始まるルートに適用
+
 
 
 // --- 備品関連API ---

@@ -67,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onActivated, onDeactivated } from 'vue'; // ★ onActivated, onDeactivated を追加
+import { ref, computed, onMounted, watch } from 'vue';
 import {
   format,
   startOfMonth,
@@ -281,34 +281,12 @@ onMounted(() => {
   }
 });
 
-// <keep-alive> を使用する場合や、コンポーネントが再利用されるシナリオで、
-// 画面がアクティブになったときにデータを再取得するために onActivated を使う。
-// 通常のルーティングでは onMounted で十分な場合が多い。
-onActivated(() => {
-  console.log('CalendarReservationView onActivated'); // ★デバッグ用ログ
-  if (authStore.isAuthenticated) {
-    fetchUserReservations(); // 画面がアクティブになるたびに最新情報を取得
-  }
-});
-
-// ログアウト時などに予約情報をクリア
-watch(() => authStore.isAuthenticated, (isAuth, wasAuth) => {
-  console.log('CalendarReservationView authStore.isAuthenticated changed:', isAuth); // ★デバッグ用ログ
-  if (isAuth && !wasAuth) { // ログインした場合
-    fetchUserReservations();
-  } else if (!isAuth && wasAuth) { // ログアウトした場合
-    allUserReservations.value = [];
-  }
-});
-
-// currentMonth が変わった時にも予約を再フィルターするが、
-// allUserReservations が最新であれば、computed property が自動で再計算する。
-// APIが期間指定をサポートし、月ごとにデータをフェッチする場合は、
-// currentMonth の watch で fetchUserReservations を呼び出す必要がある。
 watch(currentMonth, () => {
-  console.log('CalendarReservationView currentMonth changed:', currentMonth.value); // ★デバッグ用ログ
-  // もしAPIが月ごとのフェッチをサポートするならここで再フェッチ
-  // fetchUserReservations(format(currentMonth.value, 'yyyy-MM'));
+  // 月が変わった場合、表示期間内の予約を更新するために再取得する必要があるが、
+  // 今回は全予約を保持し、computedでフィルタリングしているので、
+  // fetchUserReservationsを再度呼ぶ必要はない（APIが期間指定をサポートしていない場合）。
+  // もしAPIが期間指定をサポートするなら、ここで再度APIを叩く。
+  // 今回は、月が変わっても保持している全予約から表示を再計算するので何もしない。
 });
 
 watch(() => authStore.isAuthenticated, (isAuth) => {

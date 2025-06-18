@@ -210,6 +210,7 @@ const handleCreateReservation = async () => {
       headers: { Authorization: `Bearer ${authStore.token}` },
     });
     alert('予約を作成しました。');
+    
     router.push({ name: 'CalendarReservation' }); // または Home (Dashboard)
   } catch (error) {
     console.error('予約の作成に失敗:', error);

@@ -163,8 +163,8 @@
               <h3 class="room-card-title">{{ room.name }}</h3>
               <p class="room-card-capacity">定員: {{ room.capacity }}名</p>
               <p class="room-card-branch">{{ room.branchName || 'N/A' }}</p>
-               <button @click="showRoomReservations(room)" class="room-card-cta">
-                <i class="fas fa-eye"></i> この会議室の予約を見る
+              <button @click="goToRoomDetail(room.id)" class="action-button primary-button">
+                <i class="fas fa-info-circle icon-left"></i>詳細を見る
               </button>
             </div>
           </div>
@@ -319,7 +319,10 @@ const searchRoomsAuthenticated = () => {
 };
 
 // 既存の showRoomReservations, fetchRoomReservationsDebounced などはカレンダーページに移管済み、またはこのページでは不要なら削除
-
+// 会議室詳細画面への遷移処理
+const goToRoomDetail = (roomId) => {
+  router.push({ name: 'RoomDetail', params: { id: roomId } });
+};
 
 // --- ライフサイクル & ウォッチャー ---
 const loadInitialData = async () => {

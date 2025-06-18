@@ -146,6 +146,33 @@ app.get('/reservations', (req, res) => {
     res.status(200).json(mockReservations);
 });
 
+// GET /reservations/room/:roomId (特定会議室の予約取得)
+app.get('/reservations/room/:roomId', (req, res) => {
+    const { roomId } = req.params;
+    const { date } = req.query;
+
+    console.log(`[GET /reservations/room/:roomId] roomId: ${roomId}, date: ${date}`); // ★デバッグログ追加
+
+    if (!roomId) {
+        return res.status(400).json({ message: 'Room ID is required' });
+    }
+    if (!date) { // dateが必須の場合
+        return res.status(400).json({ message: 'Date query parameter is required' });
+    }
+    // ... (以降の処理は前回提示したもの)
+    const roomExists = mockRooms.some(room => room.id === roomId);
+    if (!roomExists) {
+        console.log(`[GET /reservations/room/:roomId] Room not found: ${roomId}`);
+        return res.status(404).json({ message: 'Room not found (in reservations/room check)' });
+    }
+
+    const reservationsForRoomOnDate = mockReservations.filter(
+        reservation => reservation.roomId === roomId && reservation.date === date
+    );
+    console.log(`[GET /reservations/room/:roomId] Found reservations:`, reservationsForRoomOnDate.length);
+    res.status(200).json(reservationsForRoomOnDate);
+});
+
 // GET /reservations/:id (特定予約取得)
 app.get('/reservations/:id', (req, res) => {
     const reservation = mockReservations.find(r => r.id === req.params.id);

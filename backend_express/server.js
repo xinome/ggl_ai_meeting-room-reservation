@@ -31,6 +31,50 @@ try {
 app.use(cors());
 app.use(express.json());
 
+// ★★★ 認証ミドルウェアの定義をここ (使用する箇所より前) に移動 ★★★
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    console.log('AuthenticateToken Middleware - Token:', token); // デバッグ用ログ
+
+    if (token == null) {
+        // トークンが必須ではないとのことなので、userIdを直接入れるオプションも考慮
+        // ただし、POST /reservations ではユーザー特定が必要なので、何らかのユーザー識別子は必須
+        // 今回は「トークンがなければ特定のデモユーザーIDを仮に使う」か「エラーにするか」の判断
+        // 「トークンは必須ではないので、userIdをそのまま入れる形でも問題ありません」というコメントを考慮し、
+        // もしトークンがない場合でも、リクエストボディにuserIdが含まれていればそれを使うか、
+        // あるいは開発用に固定のuserIdを割り当てるか、などの代替策が必要。
+        // ここでは、ひとまず「トークンがなければreq.userIdはセットされない」としておく。
+        // その場合、POST /reservations での userIdFromToken の必須チェックが機能する。
+        console.log('AuthenticateToken Middleware - No token provided.');
+        return next(); // トークンがなくても次の処理へ（ルート側でuserIdの有無をチェック）
+    }
+
+    if (token.startsWith('mock-jwt-token-for-')) {
+        // const userId = token.split('-')[4];
+        // userIdの抽出方法を修正: Tokenの「-」区切りで最後から２、3番目を取得して「u-003」などのフォーマットで取得できる形に
+        const parts = token.split('-');
+        const userId = parts.length >= 4 ? parts.slice(4, 6).join('-') : null; // 「u-003」などの形式を想定
+
+        const userExists = mockUsers.some(u => u.id === userId);
+
+        console.log("mockUsers: ", mockUsers); // デバッグ用ログ
+        console.log('AuthenticateToken Middleware - User ID from token:', userId); // デバッグ用ログ
+
+        if (userExists) {
+            req.userId = userId; // リクエストオブジェクトにユーザーIDをセット
+            console.log('AuthenticateToken Middleware - User ID set from token:', req.userId);
+            return next();
+        } else {
+            console.log('AuthenticateToken Middleware - User ID from token not found in mockUsers.');
+            return res.status(403).json({ message: 'Forbidden - User from token not found' }); // ユーザーが存在しない場合
+        }
+    }
+    console.log('AuthenticateToken Middleware - Invalid token format.');
+    return res.status(403).json({ message: 'Forbidden - Invalid token' }); // トークン形式が無効
+};
+
 // --- APIエンドポイント ---
 
 /**
@@ -140,6 +184,10 @@ app.get('/rooms/:id', (req, res) => {
 });
 
 // --- 予約関連API ---
+
+// 認証ミドルウェアを予約関連のAPIパスに適用 (または全体に)
+// app.use('/reservations', authenticateToken); // ルート全体に適用する場合 (こちらの方が一般的)
+
 // GET /reservations (予約一覧取得)
 app.get('/reservations', (req, res) => {
     // TODO: クエリパラメータ (date, roomId, userId 등) に基づくフィルタリングを実装
@@ -180,13 +228,31 @@ app.get('/reservations/:id', (req, res) => {
 });
 
 // POST /reservations (予約作成 - バリデーション強化)
-app.post('/reservations', (req, res) => {
+app.post('/reservations', authenticateToken, (req, res) => {
+    console.log('--- POST /reservations Request Received ---');
+    console.log('User ID from token (in route handler):', req.userId);
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
+
     const { title, date, startTime, endTime, roomId, description, attendees, status } = req.body;
-    const userIdFromToken = req.userId; // ★認証ミドルウェアから取得する想定（後述）
+    // const userIdFromToken = req.userId; // ミドルウェアでセットされたものを使う
+
+    // ★ トークンが必須ではない場合の代替ユーザーID取得ロジック (もし導入する場合) ★
+    let effectiveUserId = req.userId; // まずトークンからのIDを試す
+    if (!effectiveUserId && req.body.userId) { // もしトークンがなく、リクエストボディにuserIdがあればそれを使う (開発用など)
+        console.log('Using userId from request body as fallback:', req.body.userId);
+        effectiveUserId = req.body.userId;
+    } else if (!effectiveUserId) { // それでもユーザーIDがなければエラー
+        console.error('Validation failed: User ID is missing (neither from token nor request body).');
+        return res.status(400).json({ message: 'User ID is required.' });
+    }
+
+    console.log('Creating reservation with data:', req.body);
+    // console.log('User ID from token:', userIdFromToken);
 
     // 1. 必須項目チェック
-    if (!title || !date || !startTime || !endTime || !roomId || !userIdFromToken) {
-        return res.status(400).json({ message: 'Missing required fields (title, date, startTime, endTime, roomId, userId)' });
+    if (!title || !date || !startTime || !endTime || !roomId /* || !effectiveUserId は上でチェック済み */) {
+        console.error('Validation failed: Missing required fields. Received:', { title, date, startTime, endTime, roomId, userId: effectiveUserId });
+        return res.status(400).json({ message: 'Missing required fields (title, date, startTime, endTime, roomId)' });
     }
 
     // 2. 時刻の整合性 (簡易チェック、実際はdate-fnsなどで正確に比較)
@@ -220,7 +286,7 @@ app.post('/reservations', (req, res) => {
         startTime,
         endTime,
         roomId,
-        userId: userIdFromToken,
+        userId: effectiveUserId,
         description: description || '',
         attendees: attendees || [],
         status: status || 'confirmed', // デフォルトは 'confirmed'
@@ -275,38 +341,6 @@ app.delete('/reservations/:id', (req, res) => {
         res.status(404).json({ message: 'Reservation not found for deletion' });
     }
 });
-
-// ★認証ミドルウェアの簡単な例 (全ての /api ルートに適用する場合など)
-const authenticateToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-    if (token == null) {
-        // 予約作成など、認証必須のAPIでは401を返す
-        // GET系で未認証でも一部情報を見せる場合は next() を呼ぶか、分岐する
-        // 今回は予約作成にユーザーIDが必要なので、未認証はエラーとする
-        if (req.method === 'POST' && req.path.startsWith('/reservations')) {
-             return res.sendStatus(401); // Unauthorized
-        }
-        return next(); // 他のルートは認証なしで許可 (デモ用)
-    }
-
-    // モックトークンの検証 (簡易版)
-    if (token.startsWith('mock-jwt-token-for-')) {
-        const userId = token.split('-')[4]; // 'mock-jwt-token-for-u-001-timestamp' の u-001 部分
-        if (mockUsers.some(u => u.id === userId)) {
-            req.userId = userId; // リクエストオブジェクトにユーザーIDをセット
-            return next();
-        }
-    }
-    return res.sendStatus(403); // Forbidden (トークンが無効)
-};
-
-// 認証ミドルウェアを予約関連のAPIパスに適用 (または全体に)
-// app.use('/api', authenticateToken); // 例: /api で始まる全ルート
-app.use('/reservations', authenticateToken); // /reservations で始まるルートに適用
-
-
 
 // --- 備品関連API ---
 app.get('/equipment', (req, res) => {

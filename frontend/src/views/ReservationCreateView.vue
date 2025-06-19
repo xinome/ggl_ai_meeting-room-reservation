@@ -203,6 +203,7 @@ const handleCreateReservation = async () => {
     ...formData,
     attendees: attendeesArray,
     // userId はバックエンドの認証ミドルウェアでセットされる想定
+    userId: authStore.user?.id || 'u-guest' // ★ ログインユーザーID、なければゲストIDなど (バックエンドの仕様と合わせる)
   };
 
   try {
